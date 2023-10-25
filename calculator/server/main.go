@@ -2,41 +2,70 @@ package main
 
 import (
 	"context"
-	"flag"
-	"fmt"
 	"log"
 	"net"
 
-	pb "github.com/umbranian0/GRPC_converter/calculator"
+	pb "github.com/umbranian0/GRPC_converter/calculator/proto"
+
 	"google.golang.org/grpc"
 )
 
-var (
-	port = flag.Int("port", 50051, "The server port")
-)
-
-// server is used to implement calculator.CalculatorServer.
 type server struct {
 	pb.UnimplementedCalculatorServer
 }
 
-// Add implements calculator.CalculatorServer
-func (s *server) Add(ctx context.Context, in *pb.Input) (*pb.Output, error) {
-	log.Printf("Received: %v %v", in.GetOperand1(), in.GetOperand2())
-	result := in.GetOperand1() + in.GetOperand2()
-	return &pb.Output{Result: result}, nil
-}
-
 func main() {
-	flag.Parse()
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+
+	lis, err := net.Listen("tcp", ":9999")
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		panic(err)
 	}
+
 	s := grpc.NewServer()
 	pb.RegisterCalculatorServer(s, &server{})
 	log.Printf("server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+
+}
+
+func (s *server) Add(ctx context.Context, in *pb.Request) (*pb.Reply, error) {
+	log.Printf("Received: %v", in.Nums)
+	var tot int32
+	for _, v := range in.Nums {
+		tot += v
+	}
+	return &pb.Reply{Num: tot}, nil
+}
+
+func (s *server) Sub(ctx context.Context, in *pb.Request) (*pb.Reply, error) {
+	log.Printf("Received: %v", in.Nums)
+	var tot int32
+	for _, v := range in.Nums {
+		tot -= v
+	}
+	return &pb.Reply{Num: tot}, nil
+}
+
+func (s *server) Mul(ctx context.Context, in *pb.Request) (*pb.Reply, error) {
+	log.Printf("Received: %v", in.Nums)
+	var tot int32
+	tot = 1
+	for _, v := range in.Nums {
+
+		tot = (tot + v) * v
+	}
+	return &pb.Reply{Num: tot}, nil
+}
+
+func (s *server) Div(ctx context.Context, in *pb.Request) (*pb.Reply, error) {
+	log.Printf("Received: %v", in.Nums)
+	var tot int32
+
+	for _, v := range in.Nums {
+
+		tot = (tot + v) / v
+	}
+	return &pb.Reply{Num: tot}, nil
 }

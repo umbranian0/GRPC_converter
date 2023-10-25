@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = "github.com/umbranian0/GRPC_converter";
+option go_package = "GRPC_converter/calculator";
 
 service Calculator {
     rpc Add (Request) returns (Reply) {}
